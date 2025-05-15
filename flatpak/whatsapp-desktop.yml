@@ -1,0 +1,69 @@
+app-id: io.github.mimbrero.WhatsAppDesktop
+runtime: org.freedesktop.Platform
+runtime-version: "22.08"
+sdk: org.freedesktop.Sdk
+
+base: org.electronjs.Electron2.BaseApp
+base-version: "22.08"
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.node14
+
+build-options:
+  append-path: /usr/lib/sdk/node14/bin
+
+finish-args:
+  # D-Bus
+  - --share=ipc
+  # Xorg and Pulseaudio
+  - --socket=x11
+  - --socket=pulseaudio
+  # Network access
+  - --share=network
+  # Camera and OpenGL rendering
+  - --device=all
+  # Notifications
+  - --talk-name=org.freedesktop.Notifications
+  # Tray icon
+  - --talk-name=org.kde.StatusNotifierWatcher
+  - --talk-name=com.canonical.indicator.application
+  - --talk-name=org.ayatana.indicator.application
+  # Support for drag & drop and downloading files (drag & drop isn't supported and the native path chooser opens
+  # for downloading files)
+  - --filesystem=host
+
+command: whatsapp-desktop-linux
+
+modules:
+  - name: whatsapp-desktop-linux
+    buildsystem: simple
+    subdir: main
+    build-options:
+      env:
+        XDG_CACHE_HOME: /run/build/whatsapp-desktop-linux/flatpak-node/cache
+        npm_config_cache: /run/build/whatsapp-desktop-linux/flatpak-node/npm-cache
+        npm_config_offline: "true"
+    build-commands:
+      - npm install --offline
+      - ../flatpak-node/electron-builder-arch-args.sh
+      - npm run build -- $ELECTRON_BUILDER_ARCH_ARGS --dir
+      - cp -a build/linux*unpacked /app/whatsapp-desktop-linux
+
+      - install -Dm755 ../run.sh /app/bin/whatsapp-desktop-linux
+      - install -Dm644 data/io.github.mimbrero.WhatsAppDesktop.appdata.xml -t /app/share/metainfo/
+      - install -Dm644 data/io.github.mimbrero.WhatsAppDesktop.desktop -t /app/share/applications/
+      - install -Dm644 data/icons/hicolor/scalable/apps/io.github.mimbrero.WhatsAppDesktop.svg -t /app/share/icons/hicolor/scalable/apps/
+      - install -Dm644 data/icons/hicolor/512x512/apps/io.github.mimbrero.WhatsAppDesktop.png -t /app/share/icons/hicolor/512x512/apps/
+      - install -Dm644 data/icons/hicolor/512x512/apps/io.github.mimbrero.WhatsAppDesktop-unread.png -t /app/share/icons/hicolor/512x512/apps/
+    sources:
+      - type: git
+        url: https://github.com/sthapa/whatsapp-desktop-linux.git
+        tag: v1.2.3-2
+        dest: main
+      - type: patch
+        path: appdata.patch
+      - generated-sources.json
+      - type: script
+        dest-filename: run.sh
+        commands:
+          - export TMPDIR="${XDG_RUNTIME_DIR}/app/${FLATPAK_ID}" # the tray icon needs this in order to work
+          - zypak-wrapper.sh /app/whatsapp-desktop-linux/whatsapp-desktop-linux "$@"
