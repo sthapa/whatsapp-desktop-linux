@@ -1,6 +1,6 @@
-app-id: io.github.mimbrero.WhatsAppDesktop
+app-id: io.github.sthapa.WhatsAppDesktop
 runtime: org.freedesktop.Platform
-runtime-version: "22.08"
+runtime-version: "24.08"
 sdk: org.freedesktop.Sdk
 
 base: org.electronjs.Electron2.BaseApp
@@ -15,7 +15,9 @@ finish-args:
   # D-Bus
   - --share=ipc
   # Xorg and Pulseaudio
-  - --socket=x11
+  # --socket=x11
+  # Use wayland but allow X11 fallback
+  - --socket=fallback-x11
   - --socket=pulseaudio
   # Network access
   - --share=network
@@ -27,6 +29,9 @@ finish-args:
   - --talk-name=org.kde.StatusNotifierWatcher
   - --talk-name=com.canonical.indicator.application
   - --talk-name=org.ayatana.indicator.application
+  # use ozone for wayland support
+  - --enable-features=UseOzonePlatform 
+  - --ozone-platform=wayland
   # Support for drag & drop and downloading files (drag & drop isn't supported and the native path chooser opens
   # for downloading files)
   - --filesystem=host
@@ -49,15 +54,15 @@ modules:
       - cp -a build/linux*unpacked /app/whatsapp-desktop-linux
 
       - install -Dm755 ../run.sh /app/bin/whatsapp-desktop-linux
-      - install -Dm644 data/io.github.mimbrero.WhatsAppDesktop.appdata.xml -t /app/share/metainfo/
-      - install -Dm644 data/io.github.mimbrero.WhatsAppDesktop.desktop -t /app/share/applications/
-      - install -Dm644 data/icons/hicolor/scalable/apps/io.github.mimbrero.WhatsAppDesktop.svg -t /app/share/icons/hicolor/scalable/apps/
-      - install -Dm644 data/icons/hicolor/512x512/apps/io.github.mimbrero.WhatsAppDesktop.png -t /app/share/icons/hicolor/512x512/apps/
-      - install -Dm644 data/icons/hicolor/512x512/apps/io.github.mimbrero.WhatsAppDesktop-unread.png -t /app/share/icons/hicolor/512x512/apps/
+      - install -Dm644 data/io.github.sthapa.WhatsAppDesktop.appdata.xml -t /app/share/metainfo/
+      - install -Dm644 data/io.github.sthapa.WhatsAppDesktop.desktop -t /app/share/applications/
+      - install -Dm644 data/icons/hicolor/scalable/apps/io.github.sthapa.WhatsAppDesktop.svg -t /app/share/icons/hicolor/scalable/apps/
+      - install -Dm644 data/icons/hicolor/512x512/apps/io.github.sthapa.WhatsAppDesktop.png -t /app/share/icons/hicolor/512x512/apps/
+      - install -Dm644 data/icons/hicolor/512x512/apps/io.github.sthapa.WhatsAppDesktop-unread.png -t /app/share/icons/hicolor/512x512/apps/
     sources:
       - type: git
         url: https://github.com/sthapa/whatsapp-desktop-linux.git
-        tag: v1.2.3-2
+        tag: main
         dest: main
       - type: patch
         path: appdata.patch
